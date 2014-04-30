@@ -22,8 +22,6 @@
 @property NSMutableArray *gpa;
 @property NSMutableArray *grade;
 @property (weak, nonatomic) IBOutlet UILabel *gradeLabel;
-@property (weak, nonatomic) IBOutlet UILabel *noData;
-@property (weak, nonatomic) IBOutlet UILabel *layover;
 
 @end
 
@@ -134,12 +132,11 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    
-    if ([self.nameClass count] != 0)
-        [self.noData removeFromSuperview];
-
-    // Return the number of rows in the section.
-    return [self.nameClass count];
+    if ([self.nameClass count]) {
+        return [self.nameClass count];
+    } else {
+        return 1;
+    }
 }
 
 
@@ -148,28 +145,47 @@
 
 
 
-- (GPACal_ClassCellTableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+- (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *CellIdentifier = @"ClassCell";
-    GPACal_ClassCellTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+    if ([self.nameClass count] == 0) {
+        static NSString *CellIdentifier = @"EmptyCell";
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+        cell.editing = FALSE;
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
-    GPACal_GPAItem *GPAItem = [[GPACal_GPAItem alloc] init];
-    GPAItem.className = [self.nameClass objectAtIndex:indexPath.row];
-    GPAItem.credit = [self.credits objectAtIndex:indexPath.row];
-    GPAItem.grade = [self.grade objectAtIndex:indexPath.row];
-    GPAItem.gpa = [self.gpa objectAtIndex:indexPath.row];
-    
-    cell.className.text = GPAItem.className;
-    cell.creditsGrade.text = [NSString stringWithFormat:@"Credits: %@ Grade: %@", GPAItem.credit, GPAItem.grade];
-    cell.GPA.text = [NSString stringWithFormat:@"%.2f", [GPAItem.gpa floatValue]];
-    
-    // Configure the cell...
-    
-    return cell;
+        return cell;
+    } else {
+        static NSString *CellIdentifier = @"ClassCell";
+        GPACal_ClassCellTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+
+        GPACal_GPAItem *GPAItem = [[GPACal_GPAItem alloc] init];
+        GPAItem.className = [self.nameClass objectAtIndex:indexPath.row];
+        GPAItem.credit = [self.credits objectAtIndex:indexPath.row];
+        GPAItem.grade = [self.grade objectAtIndex:indexPath.row];
+        GPAItem.gpa = [self.gpa objectAtIndex:indexPath.row];
+        
+        cell.className.text = GPAItem.className;
+        cell.creditsGrade.text = [NSString stringWithFormat:@"Credits: %@ Grade: %@", GPAItem.credit, GPAItem.grade];
+        cell.GPA.text = [NSString stringWithFormat:@"%.2f", [GPAItem.gpa floatValue]];
+        
+        // Configure the cell...
+        
+        return cell;
+    }
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
     return YES;
+}
+
+// Make "add" cell not deletable
+- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if ([self.nameClass count]) {
+        return UITableViewCellEditingStyleDelete;
+    } else {
+        return UITableViewCellEditingStyleNone;
+    }
 }
 
 // Removing tableview entry with swipe button
@@ -206,9 +222,6 @@
         } else {
             self.gradeLabel.text = @"GPA: ----";
         }
-        
-        if ([self.nameClass count] == 0)
-            [self.view addSubview:_noData];
         
         [tableView endUpdates];
         
